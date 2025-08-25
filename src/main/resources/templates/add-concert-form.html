@@ -4,10 +4,281 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Concert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 10px 5px 0;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+        
+        .navigation {
+            margin-bottom: 20px;
+        }
+        
+        .navigation a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Add Concert</h1>
-    <!-- add form for adding concert-->
+    <div class="container">
+        <div class="navigation">
+            <a href="concert-list.html">&larr; Back to Concert List</a>
+        </div>
+        
+        <h1>Add Concert</h1>
+        
+        <div id="success-message" class="success-message">
+            Concert added successfully!
+        </div>
+        
+        <form id="add-concert-form">
+            <div class="form-group">
+                <label for="artist">Artist/Band Name <span class="required">*</span></label>
+                <input type="text" id="artist" name="artist" required placeholder="Enter artist or band name">
+            </div>
+            
+            <div class="form-group">
+                <label for="venue">Venue <span class="required">*</span></label>
+                <input type="text" id="venue" name="venue" required placeholder="Enter venue name">
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Date <span class="required">*</span></label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="time">Time <span class="required">*</span></label>
+                <input type="time" id="time" name="time" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="price">Ticket Price ($)</label>
+                <input type="number" id="price" name="price" min="0" step="0.01" placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <select id="genre" name="genre">
+                    <option value="">Select Genre</option>
+                    <option value="rock">Rock</option>
+                    <option value="pop">Pop</option>
+                    <option value="jazz">Jazz</option>
+                    <option value="classical">Classical</option>
+                    <option value="country">Country</option>
+                    <option value="hip-hop">Hip Hop</option>
+                    <option value="electronic">Electronic</option>
+                    <option value="folk">Folk</option>
+                    <option value="reggae">Reggae</option>
+                    <option value="blues">Blues</option>
+                    <option value="r&b">R&B</option>
+                    <option value="alternative">Alternative</option>
+                    <option value="indie">Indie</option>
+                    <option value="metal">Metal</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Optional description or notes about the concert"></textarea>
+            </div>
+            
+            <div class="actions">
+                <button type="submit" class="btn btn-success">Add Concert</button>
+                <button type="reset" class="btn btn-secondary">Clear Form</button>
+                <a href="concert-list.html" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
 
+    <script>
+        // Function to save concert to localStorage
+        function saveConcert(concertData) {
+            let concerts = JSON.parse(localStorage.getItem('concerts') || '[]');
+            
+            // Generate unique ID
+            const newId = concerts.length > 0 ? Math.max(...concerts.map(c => c.id)) + 1 : 1;
+            
+            const newConcert = {
+                id: newId,
+                ...concertData,
+                dateAdded: new Date().toISOString()
+            };
+            
+            concerts.push(newConcert);
+            localStorage.setItem('concerts', JSON.stringify(concerts));
+            
+            return newConcert;
+        }
+        
+        // Show success message
+        function showSuccessMessage() {
+            const message = document.getElementById('success-message');
+            message.style.display = 'block';
+            
+            // Scroll to top to show message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Form submission handler
+        document.getElementById('add-concert-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const concertData = {
+                artist: formData.get('artist').trim(),
+                venue: formData.get('venue').trim(),
+                date: formData.get('date'),
+                time: formData.get('time'),
+                price: formData.get('price') || '0.00',
+                genre: formData.get('genre'),
+                description: formData.get('description').trim()
+            };
+            
+            // Save concert
+            saveConcert(concertData);
+            
+            // Show success message
+            showSuccessMessage();
+            
+            // Reset form
+            this.reset();
+            
+            // Focus on first input
+            document.getElementById('artist').focus();
+        });
+        
+        // Set minimum date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+            
+            // Focus on first input
+            document.getElementById('artist').focus();
+        });
+        
+        // Form reset handler
+        document.querySelector('button[type="reset"]').addEventListener('click', function() {
+            setTimeout(() => {
+                document.getElementById('artist').focus();
+            }, 10);
+        });
+    </script>
 </body>
 </html>

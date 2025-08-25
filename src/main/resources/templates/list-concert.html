@@ -4,12 +4,430 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concert List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .actions {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            margin: 5px 10px 5px 0;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 60px 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .empty-state h3 {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .concert-count {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .price {
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .date {
+            font-weight: 500;
+        }
+        
+        .genre-badge {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+        
+        .description {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .success-message, .error-message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+            }
+            
+            .description {
+                max-width: 100px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Concert List</h1>
-    <a href="/add-concert/">Add Concert</a>
-    <!-- TODO: show delete link for each concert -->
+    <div class="container">
+        <h1>Concert List</h1>
+        
+        <div id="success-message" class="success-message"></div>
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="actions">
+            <a href="add-concert.html" class="btn btn-success">Add Concert</a>
+            <button class="btn btn-warning" onclick="deleteAllConcerts()">Delete All Concerts</button>
+            <span id="concert-count" class="concert-count"></span>
+        </div>
 
-    <!-- TODO: Add list of concerts -->
+        <div id="concert-table-container">
+            <table id="concert-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Artist/Band</th>
+                        <th>Venue</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Genre</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="concert-list">
+                    <!-- Concerts will be dynamically added here -->
+                </tbody>
+            </table>
+            
+            <div id="empty-state" class="empty-state">
+                <h3>No concerts scheduled</h3>
+                <p>You haven't added any concerts yet.</p>
+                <a href="add-concert.html" class="btn btn-success">Add Your First Concert</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load concerts from localStorage
+        function loadConcerts() {
+            return JSON.parse(localStorage.getItem('concerts') || '[]');
+        }
+        
+        // Save concerts to localStorage
+        function saveConcerts(concerts) {
+            localStorage.setItem('concerts', JSON.stringify(concerts));
+        }
+        
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Format time for display
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours), parseInt(minutes));
+            return date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+        
+        // Display concerts in table
+        function displayConcerts() {
+            const concerts = loadConcerts();
+            const tbody = document.getElementById('concert-list');
+            const table = document.getElementById('concert-table');
+            const emptyState = document.getElementById('empty-state');
+            const concertCount = document.getElementById('concert-count');
+            
+            // Update concert count
+            concertCount.textContent = concerts.length === 0 ? '' : 
+                `Showing ${concerts.length} concert${concerts.length !== 1 ? 's' : ''}`;
+            
+            // Clear existing content
+            tbody.innerHTML = '';
+            
+            if (concerts.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+            
+            // Sort concerts by date
+            concerts.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            
+            concerts.forEach(concert => {
+                const row = document.createElement('tr');
+                
+                // Check if concert is in the past
+                const concertDateTime = new Date(concert.date + ' ' + concert.time);
+                const now = new Date();
+                const isPast = concertDateTime < now;
+                
+                if (isPast) {
+                    row.style.opacity = '0.7';
+                    row.style.backgroundColor = '#f8f9fa';
+                }
+                
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(concert.artist)}</strong></td>
+                    <td>${escapeHtml(concert.venue)}</td>
+                    <td class="date">${formatDate(concert.date)}</td>
+                    <td>${formatTime(concert.time)}</td>
+                    <td class="price">$${parseFloat(concert.price || 0).toFixed(2)}</td>
+                    <td>${concert.genre ? `<span class="genre-badge">${escapeHtml(concert.genre)}</span>` : '-'}</td>
+                    <td class="description" title="${escapeHtml(concert.description || '')}">${escapeHtml(concert.description || '-')}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteConcert(${concert.id})" title="Delete concert">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Delete single concert
+        function deleteConcert(id) {
+            const concerts = loadConcerts();
+            const concert = concerts.find(c => c.id === id);
+            
+            if (!concert) {
+                showMessage('Concert not found.', 'error');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete the concert "${concert.artist}" at "${concert.venue}"?`)) {
+                const updatedConcerts = concerts.filter(concert => concert.id !== id);
+                saveConcerts(updatedConcerts);
+                displayConcerts();
+                showMessage('Concert deleted successfully.', 'success');
+            }
+        }
+        
+        // Delete all concerts
+        function deleteAllConcerts() {
+            const concerts = loadConcerts();
+            
+            if (concerts.length === 0) {
+                showMessage('No concerts to delete.', 'error');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete ALL ${concerts.length} concerts? This action cannot be undone.`)) {
+                saveConcerts([]);
+                displayConcerts();
+                showMessage('All concerts deleted successfully.', 'success');
+            }
+        }
+        
+        // Show success or error message
+        function showMessage(text, type) {
+            const messageElement = document.getElementById(`${type}-message`);
+            messageElement.textContent = text;
+            messageElement.style.display = 'block';
+            
+            // Scroll to top to show message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Hide message after 4 seconds
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 4000);
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            displayConcerts();
+            
+            // Add some sample data if no concerts exist
+            const concerts = loadConcerts();
+            if (concerts.length === 0) {
+                const sampleConcerts = [
+                    {
+                        id: 1,
+                        artist: "The Rolling Stones",
+                        venue: "Madison Square Garden",
+                        date: "2025-09-15",
+                        time: "20:00",
+                        price: "150.00",
+                        genre: "rock",
+                        description: "Legendary rock band's farewell tour",
+                        dateAdded: new Date().toISOString()
+                    },
+                    {
+                        id: 2,
+                        artist: "Taylor Swift",
+                        venue: "Wembley Stadium", 
+                        date: "2025-10-22",
+                        time: "19:30",
+                        price: "200.00",
+                        genre: "pop",
+                        description: "Eras Tour special performance",
+                        dateAdded: new Date().toISOString()
+                    },
+                    {
+                        id: 3,
+                        artist: "Miles Davis Tribute",
+                        venue: "Blue Note Jazz Club",
+                        date: "2025-09-08",
+                        time: "21:00",
+                        price: "75.00",
+                        genre: "jazz",
+                        description: "Celebrating the legacy of Miles Davis",
+                        dateAdded: new Date().toISOString()
+                    }
+                ];
+                
+                saveConcerts(sampleConcerts);
+                displayConcerts();
+            }
+        });
+        
+        // Refresh concerts when page becomes visible (in case user added concerts in another tab)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                displayConcerts();
+            }
+        });
+    </script>
 </body>
 </html>
